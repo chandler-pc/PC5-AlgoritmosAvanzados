@@ -1,8 +1,28 @@
-*.vcxproj
-*.vcxproj.filters
+# Archivos de usuario y temporales
 *.user
+*.suo
+*.VC.db
+*.opendb
+
+# Carpetas de configuración de IDEs
 .vs/
 .vscode/
-PC5/
 .idea/
+
+# Carpeta de salida de compilación
 x64/
+Debug/
+Release/
+
+# Archivos generados de compilación
+*.obj
+*.exe
+*.pdb
+*.ipch
+*.log
+
+# Paquetes externos (si aplica)
+packages/
+
+# Otros
+PC5/
