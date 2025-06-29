@@ -1,0 +1,8 @@
+*.vcxproj
+*.vcxproj.filters
+*.user
+.vs/
+.vscode/
+PC5/
+.idea/
+x64/
