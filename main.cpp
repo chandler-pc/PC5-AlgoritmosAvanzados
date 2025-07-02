@@ -16,8 +16,8 @@ int main()
     if (!mesh.load_from_obj("teapot.obj")) {
         return -1;
     }
-
 	CameraController camera;
+    Matrix4 proj = Matrix4::perspective(90.0f * 3.1415f / 180.0f, width * 1.f / height, 0.1f, 100.0f);
     while (window.isOpen())
     {
 	    while (const std::optional event = window.pollEvent())
@@ -29,12 +29,10 @@ int main()
         camera.handle_input();
 
         Matrix4 view = camera.getViewMatrix();
-        Matrix4 proj = Matrix4::perspective(90.0f * 3.1415f / 180.0f, width *1.f / height, 0.1f, 100.0f);
-        Matrix4 model = Matrix4::identity();
+        Matrix4 model = Matrix4::rotate_x(3.14159f);
         Matrix4 mvp = proj * view * model;
 
         fb.clear(sf::Color::Black);
-
 
         for (const auto& vertex : mesh.vertices) {
             Vector4 v(vertex.x, vertex.y, vertex.z, 1.0f);
@@ -51,8 +49,6 @@ int main()
 
             fb.set_pixel(screen_x, screen_y, sf::Color::White);
         }
-
-        window.clear();
         fb.display(window);
         window.display();
     }

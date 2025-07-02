@@ -13,7 +13,7 @@ public:
     float yaw;
     float pitch; 
 
-    CameraController() : position(0, 0, -5), yaw(0), pitch(0) {}
+    CameraController() : position(0, 0, 0), yaw(0), pitch(0) {}
 
     void handle_input() {
         const float moveSpeed = 0.1f;
@@ -54,7 +54,6 @@ public:
         Matrix4 rotation = rotY * rotX;
 
         Matrix4 translation = Matrix4::translate(-position.x, -position.y, -position.z);
-
-        return translation * rotation;
+        return rotation * translation ;
     }
 };

@@ -24,12 +24,13 @@ struct Matrix4 {
     }
     
     static Matrix4 identity() {
-        Matrix4 I;
+        Matrix4 result;
         for (int i = 0; i < 4; ++i) {
             for (int j = 0; j < 4; ++j) {
-                I.m[i][j] = (i == j) ? 1.0f : 0.0f;
+                result.m[i][j] = (i == j) ? 1.0f : 0.0f;
             }
         }
+		return result;
     }
 
     static Matrix4 zero() {
