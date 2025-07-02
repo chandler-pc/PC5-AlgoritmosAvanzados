@@ -37,7 +37,7 @@ struct Matrix4 {
         Matrix4 zero;
         for (int i = 0; i < 4; ++i) {
             for (int j = 0; j < 4; ++j) {
-                zero.m[i][j] = (i == j) ? 1.0f : 0.0f;
+                zero.m[i][j] = 0.0f;
             }
         }
         return zero;
