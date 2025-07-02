@@ -7,7 +7,7 @@ struct Matrix4 {
     Matrix4() {
         for (int i = 0; i < 4; ++i) {
             for (int j = 0; j < 4; ++j) {
-                m[i][j] = (i == j) ? 1.0f : 0.0f;
+                m[i][j] = 0.0f;
             }
         }
     }
@@ -22,10 +22,28 @@ struct Matrix4 {
         m[2][0] = m20; m[2][1] = m21; m[2][2] = m22; m[2][3] = m23;
         m[3][0] = m30; m[3][1] = m31; m[3][2] = m32; m[3][3] = m33;
     }
+    
+    static Matrix4 identity() {
+        Matrix4 I;
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                I.m[i][j] = (i == j) ? 1.0f : 0.0f;
+            }
+        }
+    }
 
+    static Matrix4 zero() {
+        Matrix4 zero;
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                zero.m[i][j] = (i == j) ? 1.0f : 0.0f;
+            }
+        }
+        return zero;
+    }
 
     Matrix4 operator*(const Matrix4& other) const {
-        Matrix4 result;
+        Matrix4 result = Matrix4::zero();
         for (int row = 0; row < 4; ++row) {
             for (int col = 0; col < 4; ++col) {
                 for (int k= 0; k< 4; ++k) {
@@ -46,10 +64,8 @@ struct Matrix4 {
     }
 
 
-    static Matrix4 identity() {
-        return {};
-    }
-     
+
+
     static Matrix4 translate(const float x, const float y, const float z) {
         Matrix4 result = identity();
         result.m[0][3] = x;
