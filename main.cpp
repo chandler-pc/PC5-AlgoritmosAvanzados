@@ -5,8 +5,8 @@
 
 int main()
 {
-	constexpr unsigned int width = 800;
-	constexpr unsigned int height = 800;
+	constexpr unsigned int width = 1000;
+	constexpr unsigned int height = 1000;
 
 	const auto window = std::make_unique<Window>(width, height, "Pipeline");
 

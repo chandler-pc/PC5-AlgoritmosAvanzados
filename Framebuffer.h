@@ -36,28 +36,31 @@ public:
         pixels[index + 3] = color.a;
     }
 
-    void draw_line(int x1, int y1, int x2, int y2, bool aa = false, const sf::Color& color = sf::Color::White) const
+    void draw_line(int x0, int y0, int x1, int y1, bool aa = false, const sf::Color& color = sf::Color::White) const
     {
-    	const int dx = abs(x2 - x1);
-    	const int dy = -abs(y2 - y1);
-    	const int sx = x1 < x2 ? 1 : -1;
-    	const int sy = y1 < y2 ? 1 : -1;
-    	//Bresenham's line algorithm
-        int err = dx + dy;
-        while (true)
+        if (!aa)
         {
-			set_pixel(x1, y1, color);
-			if (x1 == x2 && y1 == y2) break;
-			if (const int err2 = 2 * err >= dy) {
-				if (x1 == x2) break;
-				x1 += sx;
-				err += dy;
-			}
-			else if (err2 <= dx) {
-				if (y1 == y2) break;
-				y1 += sy;
-				err += dx;
-			}
+            //Bresenham's line algorithm
+            const int dx = abs(x1 - x0);
+            const int dy = -abs(y1 - y0);
+            const int sx = x0 < x1 ? 1 : -1;
+            const int sy = y0 < y1 ? 1 : -1;
+            int err = dx + dy;
+            while (true)
+            {
+                set_pixel(x0, y0, color);
+                if (x0 == x1 && y0 == y1) break;
+                if (const int err2 = 2 * err >= dy) {
+                    if (x0 == x1) break;
+                    x0 += sx;
+                    err += dy;
+                }
+                else if (err2 <= dx) {
+                    if (y0 == y1) break;
+                    y0 += sy;
+                    err += dx;
+                }
+            }
         }
     }
 
