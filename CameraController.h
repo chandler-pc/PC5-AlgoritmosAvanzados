@@ -33,8 +33,8 @@ public:
         if (isKeyPressed(Key::S)) position = position + forward * moveSpeed;
         if (isKeyPressed(Key::A)) position = position - right * moveSpeed;
         if (isKeyPressed(Key::D)) position = position + right * moveSpeed;
-        if (isKeyPressed(Key::Q)) position = position - up * moveSpeed;
-        if (isKeyPressed(Key::E)) position = position + up * moveSpeed;
+        if (isKeyPressed(Key::E)) position = position - up * moveSpeed;
+        if (isKeyPressed(Key::Q)) position = position + up * moveSpeed;
 
         if (isKeyPressed(Key::Left))  rotation.y += rotateSpeed;
         if (isKeyPressed(Key::Right)) rotation.y -= rotateSpeed;

@@ -42,13 +42,13 @@ public:
     	const int dy = -abs(y2 - y1);
     	const int sx = x1 < x2 ? 1 : -1;
     	const int sy = y1 < y2 ? 1 : -1;
-        /* Bresenham's line algorithm
+    	//Bresenham's line algorithm
         int err = dx + dy;
         while (true)
         {
 			set_pixel(x1, y1, color);
 			if (x1 == x2 && y1 == y2) break;
-			if (int err2 = 2 * err >= dy) {
+			if (const int err2 = 2 * err >= dy) {
 				if (x1 == x2) break;
 				x1 += sx;
 				err += dy;
@@ -59,33 +59,6 @@ public:
 				err += dx;
 			}
         }
-		*/
-        //Bresenham's line algorithm (Optimized version)
-        if (dx > dy) {
-            int err = dx / 2;
-            while (x1 != x2) {
-                set_pixel(x1, y1);
-                x1 += sx;
-                err -= dy;
-                if (err < 0) {
-                    y1 += sy;
-                    err += dx;
-                }
-            }
-        }
-        else {
-            int err = dy / 2;
-            while (y1 != y2) {
-                set_pixel(x1, y1);
-                y1 += sy;
-                err -= dx;
-                if (err < 0) {
-                    x1 += sx;
-                    err += dy;
-                }
-            }
-        }
-        set_pixel(x2, y2);
     }
 
     void display(sf::RenderWindow* window) {
