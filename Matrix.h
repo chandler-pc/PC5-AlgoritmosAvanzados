@@ -2,13 +2,14 @@
 #include "Vector.h"
 
 struct Matrix4 {
-    float m[4][4];
+	float m[4][4] = {};
 
     Matrix4() {
         for (auto& i : m)
         {
-            for (int j = 0; j < 4; ++j) {
-	            i[j] = 0.0f;
+            for (float& j : i)
+            {
+	            j = 0.0f;
             }
         }
     }

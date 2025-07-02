@@ -10,13 +10,13 @@ int main()
 
 	const auto window = std::make_unique<Window>(width, height, "Pipeline");
 
-	const auto teapot_mesh = std::make_unique<Mesh>();
+	auto teapot_mesh = std::make_unique<Mesh>();
 	if (!teapot_mesh->load_from_obj("teapot.obj")) {
 		std::cerr << "Failed to load teapot.obj" << "\n";
 		return -1;
 	}
 
-	window->add_mesh(teapot_mesh.get());
+	window->add_mesh(std::move(teapot_mesh));
 	window->run();
 	
 	return 0;
