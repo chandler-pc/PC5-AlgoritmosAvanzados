@@ -43,7 +43,7 @@ public:
 	void run() const
 	{
 		const auto framebuffer = new Framebuffer(width_,height_);
-		CameraController camera;
+		const auto camera = new CameraController();
 		const Matrix4 proj = Matrix4::perspective(90.0f * 3.1415f / 180.0f, static_cast<float>(width_) / static_cast<float>(height_), 0.1f, 100.0f);
         while (window_->isOpen())
         {
@@ -53,9 +53,9 @@ public:
                     window_->close();
             }
 
-            camera.handle_input();
+            camera->handle_input();
 
-            Matrix4 view = camera.getViewMatrix();
+            Matrix4 view = camera->getViewMatrix();
             Matrix4 model = Matrix4::identity();
             Matrix4 mvp = proj * view * model;
 
