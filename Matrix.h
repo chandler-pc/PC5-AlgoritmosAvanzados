@@ -5,9 +5,10 @@ struct Matrix4 {
     float m[4][4];
 
     Matrix4() {
-        for (int i = 0; i < 4; ++i) {
+        for (auto& i : m)
+        {
             for (int j = 0; j < 4; ++j) {
-                m[i][j] = 0.0f;
+	            i[j] = 0.0f;
             }
         }
     }
@@ -34,13 +35,7 @@ struct Matrix4 {
     }
 
     static Matrix4 zero() {
-        Matrix4 zero;
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                zero.m[i][j] = 0.0f;
-            }
-        }
-        return zero;
+        return {};
     }
 
     Matrix4 operator*(const Matrix4& other) const {
