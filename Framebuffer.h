@@ -35,9 +35,9 @@ public:
         pixels[index + 3] = color.a;
     }
 
-    void display(sf::RenderWindow& window) {
+    void display(sf::RenderWindow* window) {
         texture.update(pixels);
-        window.draw(sprite);
+        window->draw(sprite);
     }
 
     unsigned int get_width() const { return width; }
