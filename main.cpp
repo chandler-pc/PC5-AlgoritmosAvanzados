@@ -45,8 +45,7 @@ int main()
             }
 
             int screen_x = static_cast<int>((projected.x + 1.0f) * 0.5f * width);
-            int screen_y = static_cast<int>((projected.y + 1.0f) * 0.5f * height);
-
+            int screen_y = static_cast<int>((1.0f - projected.y) * 0.5f * height);
             fb.set_pixel(screen_x, screen_y, sf::Color::White);
         }
         fb.display(window);
