@@ -52,4 +52,18 @@ public:
 
         return true;
     }
+
+    [[nodiscard]] std::vector<Vector2> get_edges() const {
+        std::vector<Vector2> edges;
+        for (const auto& face : faces) {
+            int v1 = static_cast<int>(face.x);
+            int v2 = static_cast<int>(face.y);
+            int v3 = static_cast<int>(face.z);
+
+            edges.emplace_back(v1, v2);
+            edges.emplace_back(v2, v3);
+            edges.emplace_back(v3, v1);
+        }
+        return edges;
+    }
 };

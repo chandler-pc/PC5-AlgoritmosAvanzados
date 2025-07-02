@@ -9,6 +9,8 @@ struct Vector2 {
 
     Vector2(const float x, const float y) : x(x), y(y) {}
 
+	Vector2(const int x, const int y) : x(static_cast<float>(x)), y(static_cast<float>(y)) {}
+
     Vector2 operator+(const Vector2& other) const
     {
 	    return { x + other.x, y + other.y };

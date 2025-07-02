@@ -16,9 +16,12 @@ class Window {
 
 	void draw_mesh(const std::unique_ptr<Mesh>& mesh, const Matrix4& mvp) const
 	{
+		std::vector<std::optional<Vector2>> projected_vertices;
+
 		for (const auto& vertex : mesh->vertices) {
 			Vector4 v(vertex.x, vertex.y, vertex.z, 1.0f);
 			Vector4 projected = mvp * v;
+
 			if (projected.w != 0.0f) {
 				projected.x /= projected.w;
 				projected.y /= projected.w;
@@ -27,11 +30,32 @@ class Window {
 			if (projected.x < -1 || projected.x > 1 ||
 				projected.y < -1 || projected.y > 1 ||
 				projected.z < -1 || projected.z > 1) {
+				projected_vertices.emplace_back(std::nullopt);
 				continue;
 			}
 			const int screen_x = static_cast<int>((projected.x + 1.0f) * 0.5f * static_cast<float>(width_));
 			const int screen_y = static_cast<int>((1.0f - (projected.y + 1.0f) * 0.5f) * static_cast<float>(height_));
-			framebuffer_->set_pixel(screen_x, screen_y, sf::Color::White);
+			projected_vertices.emplace_back(Vector2(screen_x, screen_y));
+		}
+
+
+		for (const auto& edge : mesh->get_edges()) {
+			const int x = static_cast<int>(edge.x);
+			const int y = static_cast<int>(edge.y);
+
+			if (!projected_vertices[x] || !projected_vertices[y]) {
+				continue;
+			}
+			const auto& start = projected_vertices[x].value();
+			const auto& end = projected_vertices[y].value();
+
+			framebuffer_->draw_line(start.x, start.y, end.x, end.y);
+		}
+
+		for (const auto& vertex : projected_vertices) {
+			if (vertex) {
+				framebuffer_->set_pixel(static_cast<unsigned int>(vertex->x), static_cast<unsigned int>(vertex->y), sf::Color::Red);
+			}
 		}
 	}
 
