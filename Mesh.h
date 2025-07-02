@@ -12,12 +12,12 @@
 class Mesh {
 public:
     std::vector<Vector3> vertices;
-    std::vector<std::array<int, 3>> faces;
+    std::vector<Vector3> faces;
 
     bool load_from_obj(const std::string& filename) {
         std::ifstream file(filename);
         if (!file.is_open()) {
-            std::cerr << "Error: Cannot open OBJ file: " << filename << std::endl;
+            std::cerr << "Error: Cannot open OBJ file: " << filename << "\n";
             return false;
         }
 
@@ -42,13 +42,13 @@ public:
                 else {
                     iss >> v1 >> v2 >> v3;
                 }
-                faces.push_back(std::array<int, 3>{ v1 - 1, v2 - 1, v3 - 1 });
+                faces.emplace_back(static_cast<float>(v1 - 1), static_cast<float>(v2 - 1),static_cast<float> (v3 - 1));
             }
         }
 
         file.close();
         std::cout << "Loaded OBJ: " << filename << " | Vertices: "
-            << vertices.size() << " | Faces: " << faces.size() << std::endl;
+            << vertices.size() << " | Faces: " << faces.size() << "\n";
 
         return true;
     }
