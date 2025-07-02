@@ -38,6 +38,14 @@ class Window {
 			projected_vertices.emplace_back(Vector2(screen_x, screen_y));
 		}
 
+		for (const auto& face : mesh->faces) {
+			const int v1 = static_cast<int>(face.x);
+			const int v2 = static_cast<int>(face.y);
+			const int v3 = static_cast<int>(face.z);
+			if (projected_vertices[v1] && projected_vertices[v2] && projected_vertices[v3]) {
+				draw_triangle(projected_vertices[v1].value(), projected_vertices[v2].value(), projected_vertices[v3].value());
+			}
+		}
 
 		for (const auto& edge : mesh->get_edges()) {
 			const int x = static_cast<int>(edge.x);
@@ -57,6 +65,35 @@ class Window {
 				framebuffer_->set_pixel(static_cast<unsigned int>(vertex->x), static_cast<unsigned int>(vertex->y), sf::Color::Red);
 			}
 		}
+	}
+
+	void draw_triangle(Vector2 a, Vector2 b, Vector2 c) const
+	{
+		const int xmin = std::min(a.x, std::min(b.x, c.x));
+		const int ymin = std::min(a.y, std::min(b.y, c.y));
+
+		const int xmax = std::max(a.x, std::max(b.x, c.x));
+		const int ymax = std::max(a.y, std::max(b.y, c.y));
+		for (int y = ymin; y <= ymax; y++) {
+			for (int x = xmin; x <= xmax; x++) {
+				Vector2 p;
+				p.x = x;
+				p.y = y;
+				Vector3 w;
+				w.x = getDeterminant(b, c, p);
+				w.y = getDeterminant(c, a, p);
+				w.z = getDeterminant(a, b, p);
+
+				if (w.x >= 0 && w.y >= 0 && w.z >= 0) {
+					framebuffer_->set_pixel(p.x, p.y);
+				}
+			}
+		}
+	}
+
+	static float getDeterminant(const Vector2& a, const Vector2& b, const Vector2& c)
+	{
+		return (a.x - c.x) * (b.y - c.y) - (b.x - c.x) * (a.y - c.y);
 	}
 
 public:
