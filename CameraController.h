@@ -18,27 +18,24 @@ public:
         const float moveSpeed = 0.1f;
         const float rotateSpeed = 0.02f;
 
-        Vector3 forward = {
-            std::sin(rotation.y) * std::cos(rotation.x),
-            std::sin(rotation.x),
-            std::cos(rotation.y) * std::cos(rotation.x)
-        };
+        Matrix4 rot = Matrix4::rotate_y(rotation.y) * Matrix4::rotate_x(rotation.x);
 
-        Vector3 right = {
-            std::cos(rotation.y),
-            0,
-            -std::sin(rotation.y)
-        };
+        Vector4 localForward(0, 0, 1, 1);
+        Vector4 localRight(1, 0, 0, 1);
 
-        forward = forward.normalized();
-        right = right.normalized();
+        Vector4 forward_h = (rot * localForward);
+        Vector4 right_h = (rot * localRight);
+
+        Vector3 forward = Vector3(forward_h.x, forward_h.y, forward_h.z).normalized();
+        Vector3 right = Vector3(right_h.x, right_h.y, right_h.z).normalized();
+        Vector3 up = forward.cross(right);
 
         if (isKeyPressed(Key::W)) position = position + forward * moveSpeed;
         if (isKeyPressed(Key::S)) position = position - forward * moveSpeed;
         if (isKeyPressed(Key::A)) position = position + right * moveSpeed;
         if (isKeyPressed(Key::D)) position = position - right * moveSpeed;
-        if (isKeyPressed(Key::Q)) position.y += moveSpeed;
-        if (isKeyPressed(Key::E)) position.y -= moveSpeed;
+        if (isKeyPressed(Key::Q)) position = position - up * moveSpeed;
+        if (isKeyPressed(Key::E)) position = position + up * moveSpeed;
 
         if (isKeyPressed(Key::Left))  rotation.y += rotateSpeed;
         if (isKeyPressed(Key::Right)) rotation.y -= rotateSpeed;
@@ -51,7 +48,7 @@ public:
         Matrix4 rotY = Matrix4::rotate_y(-rotation.y);
         Matrix4 rotZ = Matrix4::rotate_z(-rotation.z);
 
-        Matrix4 rotationMatrix = rotZ * rotY * rotX;
+        Matrix4 rotationMatrix = rotX * rotY;
         Matrix4 translation = Matrix4::translate(-position.x, -position.y, -position.z);
         return rotationMatrix * translation;
     }
