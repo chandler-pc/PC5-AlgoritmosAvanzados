@@ -30,10 +30,10 @@ public:
         Vector3 right = Vector3(right_h.x, right_h.y, right_h.z).normalized();
         Vector3 up = forward.cross(right);
 
-        if (isKeyPressed(Key::W)) position = position + forward * moveSpeed;
-        if (isKeyPressed(Key::S)) position = position - forward * moveSpeed;
-        if (isKeyPressed(Key::A)) position = position + right * moveSpeed;
-        if (isKeyPressed(Key::D)) position = position - right * moveSpeed;
+        if (isKeyPressed(Key::W)) position = position - forward * moveSpeed;
+        if (isKeyPressed(Key::S)) position = position + forward * moveSpeed;
+        if (isKeyPressed(Key::A)) position = position - right * moveSpeed;
+        if (isKeyPressed(Key::D)) position = position + right * moveSpeed;
         if (isKeyPressed(Key::Q)) position = position - up * moveSpeed;
         if (isKeyPressed(Key::E)) position = position + up * moveSpeed;
 

@@ -44,6 +44,11 @@ int main()
                 projected.z /= projected.w;
             }
 
+            if (projected.x < -1 || projected.x > 1 ||
+                projected.y < -1 || projected.y > 1 ||
+                projected.z < -1 || projected.z > 1) {
+                continue;
+            }
             int screen_x = static_cast<int>((projected.x + 1.0f) * 0.5f * width);
             int screen_y = static_cast<int>((1.0f - projected.y) * 0.5f * height);
             fb.set_pixel(screen_x, screen_y, sf::Color::White);
