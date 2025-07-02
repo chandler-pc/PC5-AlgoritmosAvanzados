@@ -29,7 +29,7 @@ int main()
         camera.handle_input();
 
         Matrix4 view = camera.getViewMatrix();
-        Matrix4 model = Matrix4::rotate_x(3.14159f);
+        Matrix4 model = Matrix4::identity();
         Matrix4 mvp = proj * view * model;
 
         fb.clear(sf::Color::Black);
@@ -45,7 +45,7 @@ int main()
             }
 
             int screen_x = static_cast<int>((projected.x + 1.0f) * 0.5f * width);
-            int screen_y = static_cast<int>((1.0f - (projected.y + 1.0f) * 0.5f) * height);
+            int screen_y = static_cast<int>((projected.y + 1.0f) * 0.5f * height);
 
             fb.set_pixel(screen_x, screen_y, sf::Color::White);
         }
