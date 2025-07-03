@@ -51,8 +51,8 @@ struct Matrix4 {
         return result;
     }
 
-    Vector4 operator*(const Vector4& v) const {
-        Vector4 result;
+    Vector4<float> operator*(const Vector4<float>& v) const {
+        Vector4<float> result;
         result.x = m[0][0] * v.x + m[0][1] * v.y + m[0][2] * v.z + m[0][3] * v.w;
         result.y = m[1][0] * v.x + m[1][1] * v.y + m[1][2] * v.z + m[1][3] * v.w;
         result.z = m[2][0] * v.x + m[2][1] * v.y + m[2][2] * v.z + m[2][3] * v.w;
@@ -128,10 +128,10 @@ struct Matrix4 {
     }
 
 
-    static Matrix4 look_at(const Vector3& eye, const Vector3& target, const Vector3& y) {
-        Vector3 fwd = (eye - target).normalized();
-        Vector3 side = (fwd *-1).cross(y).normalized();
-        Vector3 up = side.cross(fwd * -1).normalized();;
+    static Matrix4 look_at(const Vector3<float>& eye, const Vector3<float>& target, const Vector3<float>& y) {
+        Vector3<float> fwd = (eye - target).normalized();
+        Vector3<float> side = (fwd *-1).cross(y).normalized();
+        Vector3<float> up = side.cross(fwd * -1).normalized();;
 
         Matrix4 result = Matrix4::identity();
 

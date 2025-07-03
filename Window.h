@@ -16,7 +16,7 @@ class Window {
 
 	void draw_mesh(const std::unique_ptr<Mesh>& mesh, const Matrix4& mvp) const
 	{
-		std::vector<std::optional<Vector2>> projected_vertices;
+		std::vector<std::optional<Vector2<int>>> projected_vertices;
 
 		for (const auto& vertex : mesh->vertices) {
 			Vector4 v(vertex.x, vertex.y, vertex.z, 1.0f);
@@ -39,17 +39,17 @@ class Window {
 		}
 
 		for (const auto& face : mesh->faces) {
-			const int v1 = static_cast<int>(face.x);
-			const int v2 = static_cast<int>(face.y);
-			const int v3 = static_cast<int>(face.z);
+			const int v1 = (face.x);
+			const int v2 = (face.y);
+			const int v3 = (face.z);
 			if (projected_vertices[v1] && projected_vertices[v2] && projected_vertices[v3]) {
 				draw_triangle(projected_vertices[v1].value(), projected_vertices[v2].value(), projected_vertices[v3].value());
 			}
 		}
 
 		for (const auto& edge : mesh->get_edges()) {
-			const int x = static_cast<int>(edge.x);
-			const int y = static_cast<int>(edge.y);
+			const int x = (edge.x);
+			const int y = (edge.y);
 
 			if (!projected_vertices[x] || !projected_vertices[y]) {
 				continue;
@@ -67,34 +67,34 @@ class Window {
 		}
 	}
 
-	void draw_triangle(Vector2 a, Vector2 b, Vector2 c) const
+	void draw_triangle(const Vector2<float>& a, const Vector2<float>& b, const Vector2<float>& c) const
 	{
-		const int xmin = std::min(a.x, std::min(b.x, c.x));
-		const int ymin = std::min(a.y, std::min(b.y, c.y));
+		const int xmin = static_cast<int>(std::floor(std::min({ a.x, b.x, c.x })));
+		const int ymin = static_cast<int>(std::floor(std::min({ a.y, b.y, c.y })));
 
-		const int xmax = std::max(a.x, std::max(b.x, c.x));
-		const int ymax = std::max(a.y, std::max(b.y, c.y));
+		const int xmax = static_cast<int>(std::ceil(std::max({ a.x, b.x, c.x })));
+		const int ymax = static_cast<int>(std::ceil(std::max({ a.y, b.y, c.y })));
+
 		for (int y = ymin; y <= ymax; y++) {
 			for (int x = xmin; x <= xmax; x++) {
-				Vector2 p;
-				p.x = x;
-				p.y = y;
-				Vector3 w;
-				w.x = getDeterminant(b, c, p);
-				w.y = getDeterminant(c, a, p);
-				w.z = getDeterminant(a, b, p);
+				Vector2<int> p(x, y);
 
-				if (w.x >= 0 && w.y >= 0 && w.z >= 0) {
-					framebuffer_->set_pixel(p.x, p.y);
+				float w0 = getDeterminant(b, c, Vector2<float>(p));
+				float w1 = getDeterminant(c, a, Vector2<float>(p));
+				float w2 = getDeterminant(a, b, Vector2<float>(p));
+
+				if (w0 >= 0 && w1 >= 0 && w2 >= 0) {
+					framebuffer_->set_pixel(x, y);
 				}
 			}
 		}
 	}
 
-	static float getDeterminant(const Vector2& a, const Vector2& b, const Vector2& c)
+	static float getDeterminant(const Vector2<float>& a, const Vector2<float>& b, const Vector2<float>& c)
 	{
 		return (a.x - c.x) * (b.y - c.y) - (b.x - c.x) * (a.y - c.y);
 	}
+
 
 public:
 	Window(const unsigned int width, const unsigned int height, const sf::String& title) : width_(width), height_(height), window_(sf::VideoMode({ width, height }), title)

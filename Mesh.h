@@ -11,8 +11,8 @@
 
 class Mesh {
 public:
-    std::vector<Vector3> vertices;
-    std::vector<Vector3> faces;
+    std::vector<Vector3<float>> vertices;
+    std::vector<Vector3<int>> faces;
 
     bool load_from_obj(const std::string& filename) {
         std::ifstream file(filename);
@@ -53,12 +53,12 @@ public:
         return true;
     }
 
-    [[nodiscard]] std::vector<Vector2> get_edges() const {
-        std::vector<Vector2> edges;
+    [[nodiscard]] std::vector<Vector2<int>> get_edges() const {
+        std::vector<Vector2<int>> edges;
         for (const auto& face : faces) {
-            int v1 = static_cast<int>(face.x);
-            int v2 = static_cast<int>(face.y);
-            int v3 = static_cast<int>(face.z);
+            int v1 = (face.x);
+            int v2 = (face.y);
+            int v3 = (face.z);
 
             edges.emplace_back(v1, v2);
             edges.emplace_back(v2, v3);

@@ -8,8 +8,8 @@ using Key = sf::Keyboard::Key;
 
 class CameraController {
 public:
-    Vector3 position;
-    Vector3 rotation;
+    Vector3<float> position;
+    Vector3<float> rotation;
 
     CameraController() : position(0, 0, 0), rotation(0, 0, 0) {}
 
@@ -19,15 +19,15 @@ public:
 
         Matrix4 rot = Matrix4::rotate_y(rotation.y) * Matrix4::rotate_x(rotation.x);
 
-        Vector4 localForward(0, 0, 1, 1);
-        Vector4 localRight(1, 0, 0, 1);
+        Vector4<float> localForward(0, 0, 1, 1);
+        Vector4<float> localRight(1, 0, 0, 1);
 
-        Vector4 forward_h = (rot * localForward);
-        Vector4 right_h = (rot * localRight);
+        Vector4<float> forward_h = (rot * localForward);
+        Vector4<float> right_h = (rot * localRight);
 
-        Vector3 forward = Vector3(forward_h.x, forward_h.y, forward_h.z).normalized();
-        Vector3 right = Vector3(right_h.x, right_h.y, right_h.z).normalized();
-        Vector3 up = forward.cross(right);
+        Vector3<float> forward = Vector3<float>(forward_h.x, forward_h.y, forward_h.z).normalized();
+        Vector3<float> right = Vector3<float>(right_h.x, right_h.y, right_h.z).normalized();
+        Vector3<float> up = forward.cross(right);
 
         if (isKeyPressed(Key::W)) position = position - forward * moveSpeed;
         if (isKeyPressed(Key::S)) position = position + forward * moveSpeed;
