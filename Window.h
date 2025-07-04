@@ -1,11 +1,12 @@
 #pragma once
 #include <SFML/Graphics/RenderWindow.hpp>
-
 #include "CameraController.h"
 #include "Framebuffer.h"
 #include "Matrix.h"
 #include "Vector.h"
 #include "Mesh.h"
+#include <limits>
+#include <SFML/System/Clock.hpp>
 
 class Window {
 	unsigned int width_;
@@ -13,10 +14,19 @@ class Window {
 	sf::RenderWindow window_;
 	std::vector<std::unique_ptr<Mesh>> meshes_;
 	std::unique_ptr<Framebuffer> framebuffer_;
+	float* depth_buffer_ = nullptr;
+	float fps_ = 0.f;
+	float last_time_ = 0.f;
+	sf::Clock clock_;
 
 	void draw_mesh(const std::unique_ptr<Mesh>& mesh, const Matrix4& mvp) const
 	{
-		std::vector<std::optional<Vector2<int>>> projected_vertices;
+		struct Vertex
+		{
+			Vector2<int> position;
+			float z;
+		};
+		std::vector<std::optional<Vertex>> projected_vertices;
 
 		for (const auto& vertex : mesh->vertices) {
 			Vector4 v(vertex.x, vertex.y, vertex.z, 1.0f);
@@ -33,9 +43,11 @@ class Window {
 				projected_vertices.emplace_back(std::nullopt);
 				continue;
 			}
+			const float depth = (projected.z + 1.0f) * 0.5f;
+
 			const int screen_x = static_cast<int>((projected.x + 1.0f) * 0.5f * static_cast<float>(width_));
 			const int screen_y = static_cast<int>((1.0f - (projected.y + 1.0f) * 0.5f) * static_cast<float>(height_));
-			projected_vertices.emplace_back(Vector2(screen_x, screen_y));
+			projected_vertices.emplace_back(Vertex{ Vector2(screen_x, screen_y), depth });
 		}
 
 		for (const auto& face : mesh->faces) {
@@ -43,11 +55,14 @@ class Window {
 			const int v2 = (face.y);
 			const int v3 = (face.z);
 			if (projected_vertices[v1] && projected_vertices[v2] && projected_vertices[v3]) {
-				draw_triangle(projected_vertices[v1].value(), projected_vertices[v2].value(), projected_vertices[v3].value());
+				const auto& vtx1 = projected_vertices[v3].value();
+				const auto& vtx2 = projected_vertices[v2].value();
+				const auto& vtx3 = projected_vertices[v1].value();
+				draw_triangle(vtx1.position, vtx1.z, vtx2.position, vtx2.z, vtx3.position, vtx3.z);
 			}
 		}
 
-		for (const auto& edge : mesh->get_edges()) {
+		/*for (const auto& edge : mesh->get_edges()) {
 			const int x = (edge.x);
 			const int y = (edge.y);
 
@@ -57,34 +72,54 @@ class Window {
 			const auto& start = projected_vertices[x].value();
 			const auto& end = projected_vertices[y].value();
 
-			framebuffer_->draw_line(start.x, start.y, end.x, end.y);
+			framebuffer_->draw_line(start.position.x, start.position.y, end.position.x, end.position.y);
 		}
 
 		for (const auto& vertex : projected_vertices) {
 			if (vertex) {
-				framebuffer_->set_pixel(static_cast<unsigned int>(vertex->x), static_cast<unsigned int>(vertex->y), sf::Color::Red);
+				framebuffer_->set_pixel(static_cast<unsigned int>(vertex->position.x), static_cast<unsigned int>(vertex->position.y), sf::Color::Red);
 			}
-		}
+		}*/
 	}
 
-	void draw_triangle(const Vector2<float>& a, const Vector2<float>& b, const Vector2<float>& c) const
+	void draw_triangle(
+		const Vector2<float>& a, float za,
+		const Vector2<float>& b, float zb,
+		const Vector2<float>& c, float zc) const
 	{
 		const int xmin = static_cast<int>(std::floor(std::min({ a.x, b.x, c.x })));
 		const int ymin = static_cast<int>(std::floor(std::min({ a.y, b.y, c.y })));
-
 		const int xmax = static_cast<int>(std::ceil(std::max({ a.x, b.x, c.x })));
 		const int ymax = static_cast<int>(std::ceil(std::max({ a.y, b.y, c.y })));
 
+		float area = getDeterminant(a, b, c);
+
+		if (std::abs(area) < 1e-6f) {
+			return;
+		}
+
+		auto color = sf::Color(rand() % 256, rand() % 256, rand() % 256);
 		for (int y = ymin; y <= ymax; y++) {
 			for (int x = xmin; x <= xmax; x++) {
-				Vector2<int> p(x, y);
+				if (x < 0 || x >= width_ || y < 0 || y >= height_) continue;
+				Vector2 p(x, y);
 
-				float w0 = getDeterminant(b, c, Vector2<float>(p));
-				float w1 = getDeterminant(c, a, Vector2<float>(p));
-				float w2 = getDeterminant(a, b, Vector2<float>(p));
+				float w0 = getDeterminant(b, c, p);
+				float w1 = getDeterminant(c, a, p);
+				float w2 = getDeterminant(a, b, p);
 
 				if (w0 >= 0 && w1 >= 0 && w2 >= 0) {
-					framebuffer_->set_pixel(x, y);
+					float alpha = w0 / area;
+					float beta = w1 / area;
+					float gamma = w2 / area;
+
+					float z = 1/(alpha / za + beta / zb + gamma / zc);
+
+					if ( z < depth_buffer_[y * width_ + x])
+					{
+						framebuffer_->set_pixel(x, y, color);
+						depth_buffer_[y * width_ + x] = z;
+					}
 				}
 			}
 		}
@@ -97,8 +132,12 @@ class Window {
 
 
 public:
-	Window(const unsigned int width, const unsigned int height, const sf::String& title) : width_(width), height_(height), window_(sf::VideoMode({ width, height }), title)
+	Window(const unsigned int width, const unsigned int height, const sf::String& title) : width_(width), height_(height), window_(sf::VideoMode({ width, height }), title), depth_buffer_(new float[width_ * height_])
 	{
+		for (unsigned int i = 0; i < width * height; ++i) {
+			depth_buffer_[i] = std::numeric_limits<float>::max();
+		}
+		clock_ = sf::Clock();
 	}
 
 	void run()
@@ -108,6 +147,7 @@ public:
 		const Matrix4 proj = Matrix4::perspective(90.0f * 3.1415f / 180.0f, static_cast<float>(width_) / static_cast<float>(height_), 0.1f, 100.0f);
         while (window_.isOpen())
         {
+			sf::Time delta_time = clock_.restart();
             while (const std::optional event = window_.pollEvent())
             {
                 if (event->is<sf::Event::Closed>())
@@ -121,12 +161,17 @@ public:
             Matrix4 mvp = proj * view * model;
 
 			framebuffer_->clear(sf::Color::Black);
+			for (unsigned int i = 0; i < width_ * height_; ++i) {
+				depth_buffer_[i] = std::numeric_limits<float>::max();
+			}
 			for (const auto& mesh : meshes_)
 			{
 				draw_mesh(mesh, mvp);
 			}
 			framebuffer_->display(&window_);
             window_.display();
+			fps_ = 1.f / delta_time.asSeconds();
+			window_.setTitle("Pipeline - FPS: " + std::to_string(static_cast<int>(fps_)));
         }
 	}
 

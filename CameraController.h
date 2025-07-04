@@ -11,7 +11,7 @@ public:
     Vector3<float> position;
     Vector3<float> rotation;
 
-    CameraController() : position(0, 0, 0), rotation(0, 0, 0) {}
+    CameraController() : position(0, 0, 5), rotation(0, 0, 0) {}
 
     void handle_input() {
         const float moveSpeed = 0.1f;
