@@ -82,6 +82,13 @@ struct Vector3 {
         };
     }
 
+	Vector3<T> operator+=(const Vector3<T>& v) {
+		x += v.x;
+		y += v.y;
+		z += v.z;
+		return *this;
+	}
+
     [[nodiscard]] float dot(const Vector3<T>& v) const {
         return static_cast<float>(x * v.x + y * v.y + z * v.z);
     }

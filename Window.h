@@ -8,6 +8,13 @@
 #include <limits>
 #include <SFML/System/Clock.hpp>
 
+struct Vertex
+{
+	Vector2<int> position;
+	float z;
+	Vector3<float> normal;
+};
+
 class Window {
 	unsigned int width_;
 	unsigned int height_;
@@ -19,16 +26,12 @@ class Window {
 	float last_time_ = 0.f;
 	sf::Clock clock_;
 
-	void draw_mesh(const std::unique_ptr<Mesh>& mesh, const Matrix4& mvp) const
+	void draw_mesh(const std::unique_ptr<Mesh>& mesh, const Matrix4& mvp, const Matrix4& view, const CameraController camera) const
 	{
-		struct Vertex
-		{
-			Vector2<int> position;
-			float z;
-		};
 		std::vector<std::optional<Vertex>> projected_vertices;
 
-		for (const auto& vertex : mesh->vertices) {
+		for (size_t i = 0; i < mesh->vertices.size(); ++i) {
+			const auto& vertex = mesh->vertices[i];
 			Vector4 v(vertex.x, vertex.y, vertex.z, 1.0f);
 			Vector4 projected = mvp * v;
 
@@ -43,11 +46,21 @@ class Window {
 				projected_vertices.emplace_back(std::nullopt);
 				continue;
 			}
+
+			Vector3<float> n = mesh->normals[i];
+			Vector4 n4(n.x, n.y, n.z, 0.0f);
+			Vector4 n_transformed = view * n4;
+
+			Vector3<float> normal_transformed = Vector3(
+				n_transformed.x,
+				n_transformed.y,
+				n_transformed.z).normalized();
+
 			const float depth = (projected.z + 1.0f) * 0.5f;
 
 			const int screen_x = static_cast<int>((projected.x + 1.0f) * 0.5f * static_cast<float>(width_));
 			const int screen_y = static_cast<int>((1.0f - (projected.y + 1.0f) * 0.5f) * static_cast<float>(height_));
-			projected_vertices.emplace_back(Vertex{ Vector2(screen_x, screen_y), depth });
+			projected_vertices.emplace_back(Vertex{ Vector2(screen_x, screen_y), depth, normal_transformed, });
 		}
 
 		for (const auto& face : mesh->faces) {
@@ -58,7 +71,7 @@ class Window {
 				const auto& vtx1 = projected_vertices[v3].value();
 				const auto& vtx2 = projected_vertices[v2].value();
 				const auto& vtx3 = projected_vertices[v1].value();
-				draw_triangle(vtx1.position, vtx1.z, vtx2.position, vtx2.z, vtx3.position, vtx3.z);
+				draw_triangle(vtx1, vtx2, vtx3, camera);
 			}
 		}
 
@@ -83,10 +96,18 @@ class Window {
 	}
 
 	void draw_triangle(
-		const Vector2<float>& a, float za,
-		const Vector2<float>& b, float zb,
-		const Vector2<float>& c, float zc) const
+		const Vertex& v0,
+		const Vertex& v1,
+		const Vertex& v2,
+		CameraController camera
+		) const
 	{
+		auto a = v0.position;
+		auto b = v1.position;
+		auto c = v2.position;
+		float za = v0.z;
+		float zb = v1.z;
+		float zc = v2.z;
 		const int xmin = static_cast<int>(std::floor(std::min({ a.x, b.x, c.x })));
 		const int ymin = static_cast<int>(std::floor(std::min({ a.y, b.y, c.y })));
 		const int xmax = static_cast<int>(std::ceil(std::max({ a.x, b.x, c.x })));
@@ -98,7 +119,6 @@ class Window {
 			return;
 		}
 
-		auto color = sf::Color(rand() % 256, rand() % 256, rand() % 256);
 		for (int y = ymin; y <= ymax; y++) {
 			for (int x = xmin; x <= xmax; x++) {
 				if (x < 0 || x >= width_ || y < 0 || y >= height_) continue;
@@ -112,6 +132,24 @@ class Window {
 					float alpha = w0 / area;
 					float beta = w1 / area;
 					float gamma = w2 / area;
+					Vector3<float> interpolated_normals = (v0.normal * alpha + v1.normal *  beta   + v2.normal * gamma ).normalized();
+					Vector3<float> lightPos = Vector3<float>(0.0f, 10.0f, 10.0f);
+					Vector3<float> L = (lightPos).normalized();
+					Vector3<float> V = (camera.position).normalized();
+					Vector3<float> R = (interpolated_normals * interpolated_normals.dot(L) * 2.0f - L).normalized();
+
+					float ambient = 0.1f;
+					float diff = std::max(0.0f, interpolated_normals.dot(L));
+					float spec = pow(std::max(0.0f, R.dot(V)), 100);
+
+					float intensity = ambient + 1 * diff + .5f * spec;
+					intensity = std::clamp(intensity, 0.0f, 1.0f);
+
+					sf::Color color = sf::Color(
+						static_cast<int>(intensity * 255),
+						static_cast<int>(intensity * 255),
+						static_cast<int>(intensity * 255)
+					);
 
 					float z = 1/(alpha / za + beta / zb + gamma / zc);
 
@@ -166,7 +204,7 @@ public:
 			}
 			for (const auto& mesh : meshes_)
 			{
-				draw_mesh(mesh, mvp);
+				draw_mesh(mesh, mvp, view, camera);
 			}
 			framebuffer_->display(&window_);
             window_.display();

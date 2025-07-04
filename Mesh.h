@@ -6,13 +6,35 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include <array>
 #include "Vector.h"
 
 class Mesh {
+
+    void calculate_normals() {
+        normals.resize(vertices.size(), Vector3(0.0f, 0.0f, 0.0f));
+
+        for (const auto& face : faces) {
+            auto& v0 = vertices[face.x];
+            auto& v1 = vertices[face.y];
+            auto& v2 = vertices[face.z];
+
+            Vector3<float> edge1 = v1 - v0;
+            Vector3<float> edge2 = v2 - v0;
+            Vector3<float> face_normal = edge1.cross(edge2).normalized();
+
+            normals[face.x] += face_normal;
+            normals[face.y] += face_normal;
+            normals[face.z] += face_normal;
+        }
+
+        for (auto& normal : normals) {
+            normal = normal.normalized();
+        }
+    }
 public:
     std::vector<Vector3<float>> vertices;
     std::vector<Vector3<int>> faces;
+    std::vector<Vector3<float>> normals;
 
     bool load_from_obj(const std::string& filename) {
         std::ifstream file(filename);
@@ -42,11 +64,20 @@ public:
                 else {
                     iss >> v1 >> v2 >> v3;
                 }
-                faces.emplace_back(static_cast<float>(v1 - 1), static_cast<float>(v2 - 1),static_cast<float> (v3 - 1));
-            }
+                faces.emplace_back(v1 - 1, v2 - 1,v3 - 1);
+			}
+			else if (prefix == "vn") {
+				float nx, ny, nz;
+				iss >> nx >> ny >> nz;
+				normals.emplace_back(nx, ny, nz);
+			}
         }
 
         file.close();
+        if (normals.empty())
+        {
+            calculate_normals();
+        }
         std::cout << "Loaded OBJ: " << filename << " | Vertices: "
             << vertices.size() << " | Faces: " << faces.size() << "\n";
 
