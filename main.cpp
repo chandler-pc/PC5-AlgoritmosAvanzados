@@ -5,10 +5,6 @@
 
 int main()
 {
-	std::string mesh_name;
-	std::cin >> mesh_name;
-
-
 	constexpr unsigned int width = 1000;
 	constexpr unsigned int height = 1000;
 
@@ -16,8 +12,7 @@ int main()
 
 	auto mesh = std::make_unique<Mesh>();
 
-
-	if (!mesh->load_from_obj(mesh_name)) {
+	if (!mesh->load_from_obj("teapot.obj")) {
 		std::cerr << "Failed to load teapot.obj" << "\n";
 		return -1;
 	}
