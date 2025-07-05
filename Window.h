@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <SFML/Graphics/RenderWindow.hpp>
 #include "CameraController.h"
 #include "Framebuffer.h"
@@ -8,13 +8,22 @@
 #include <limits>
 #include <SFML/System/Clock.hpp>
 #include "Lightning.h"
+#include <SFML/Window/Keyboard.hpp>
+
+enum class ShadingMode {
+	FLAT,
+	GOURAUD,
+	PHONG
+};
 
 struct Vertex
 {
 	Vector2<int> position;
 	float z;
 	Vector3<float> normal;
+	sf::Color color;
 };
+
 
 class Window {
 	unsigned int width_;
@@ -26,7 +35,12 @@ class Window {
 	float* depth_buffer_ = nullptr;
 	float fps_ = 0.f;
 	float last_time_ = 0.f;
+	ShadingMode shading_mode_ = ShadingMode::PHONG;
 	sf::Clock clock_;
+	bool key_f1_was_pressed_ = false;
+	bool key_f2_was_pressed_ = false;
+	bool key_f3_was_pressed_ = false;
+
 
 	void draw_mesh(const std::unique_ptr<Mesh>& mesh, const Matrix4& mvp, const Matrix4& view, const CameraController camera) const
 	{
@@ -62,7 +76,10 @@ class Window {
 
 			const int screen_x = static_cast<int>((projected.x + 1.0f) * 0.5f * static_cast<float>(width_));
 			const int screen_y = static_cast<int>((1.0f - (projected.y + 1.0f) * 0.5f) * static_cast<float>(height_));
-			projected_vertices.emplace_back(Vertex{ Vector2(screen_x, screen_y), depth, normal_transformed, });
+
+			sf::Color vertex_color = lighting_->calculate_color(normal_transformed, camera.position);
+
+			projected_vertices.emplace_back(Vertex{ Vector2(screen_x, screen_y), depth, normal_transformed, vertex_color });
 		}
 
 		for (const auto& face : mesh->faces) {
@@ -102,7 +119,7 @@ class Window {
 		const Vertex& v1,
 		const Vertex& v2,
 		CameraController camera
-		) const
+	) const
 	{
 		auto a = v0.position;
 		auto b = v1.position;
@@ -110,15 +127,19 @@ class Window {
 		float za = v0.z;
 		float zb = v1.z;
 		float zc = v2.z;
+
 		const int xmin = static_cast<int>(std::floor(std::min({ a.x, b.x, c.x })));
 		const int ymin = static_cast<int>(std::floor(std::min({ a.y, b.y, c.y })));
 		const int xmax = static_cast<int>(std::ceil(std::max({ a.x, b.x, c.x })));
 		const int ymax = static_cast<int>(std::ceil(std::max({ a.y, b.y, c.y })));
 
 		float area = getDeterminant(a, b, c);
+		if (std::abs(area) < 1e-6f) return;
 
-		if (std::abs(area) < 1e-6f) {
-			return;
+		sf::Color face_color = sf::Color::White;
+		if (shading_mode_ == ShadingMode::FLAT) {
+			Vector3<float> face_normal = (v1.normal + v2.normal + v0.normal).normalized();
+			face_color = lighting_->calculate_color(face_normal, camera.position);
 		}
 
 		for (int y = ymin; y <= ymax; y++) {
@@ -134,15 +155,31 @@ class Window {
 					float alpha = w0 / area;
 					float beta = w1 / area;
 					float gamma = w2 / area;
-					Vector3<float> interpolated_normals = (v0.normal * alpha + v1.normal *  beta   + v2.normal * gamma ).normalized();
+					float z = 1.0f / (alpha / za + beta / zb + gamma / zc);
 
-					sf::Color color = lighting_->calculate_color(interpolated_normals, camera.position);
+					if (z < depth_buffer_[y * width_ + x]) {
+						sf::Color color;
 
+						if (shading_mode_ == ShadingMode::FLAT) {
+							color = face_color;
+						}
+						else if (shading_mode_ == ShadingMode::GOURAUD) {
+							auto interpolate_channel = [&](uint8_t a, uint8_t b, uint8_t c) -> uint8_t {
+								return static_cast<uint8_t>(
+									alpha * static_cast<float>(a) +
+									beta * static_cast<float>(b) +
+									gamma * static_cast<float>(c));
+								};
+							color = sf::Color(
+								interpolate_channel(v0.color.r, v1.color.r, v2.color.r),
+								interpolate_channel(v0.color.g, v1.color.g, v2.color.g),
+								interpolate_channel(v0.color.b, v1.color.b, v2.color.b));
+						}
+						else if (shading_mode_ == ShadingMode::PHONG) {
+							Vector3<float> interpolated_normal = (v0.normal * alpha + v1.normal * beta + v2.normal * gamma).normalized();
+							color = lighting_->calculate_color(interpolated_normal, camera.position);
+						}
 
-					float z = 1/(alpha / za + beta / zb + gamma / zc);
-
-					if ( z < depth_buffer_[y * width_ + x])
-					{
 						framebuffer_->set_pixel(x, y, color);
 						depth_buffer_[y * width_ + x] = z;
 					}
@@ -151,14 +188,44 @@ class Window {
 		}
 	}
 
+
 	static float getDeterminant(const Vector2<float>& a, const Vector2<float>& b, const Vector2<float>& c)
 	{
 		return (a.x - c.x) * (b.y - c.y) - (b.x - c.x) * (a.y - c.y);
 	}
 
+	void process_shading_input()
+	{
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::F1)) {
+			if (!key_f1_was_pressed_) {
+				shading_mode_ = ShadingMode::FLAT;
+				key_f1_was_pressed_ = true;
+			}
+		}
+		else key_f1_was_pressed_ = false;
+
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::F2)) {
+			if (!key_f2_was_pressed_) {
+				shading_mode_ = ShadingMode::GOURAUD;
+				key_f2_was_pressed_ = true;
+			}
+		}
+		else key_f2_was_pressed_ = false;
+
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::F3)) {
+			if (!key_f3_was_pressed_) {
+				shading_mode_ = ShadingMode::PHONG;
+				key_f3_was_pressed_ = true;
+			}
+		}
+		else key_f3_was_pressed_ = false;
+	}
+
 
 public:
-	Window(const unsigned int width, const unsigned int height, const sf::String& title) : width_(width), height_(height), window_(sf::VideoMode({ width, height }), title), depth_buffer_(new float[width_ * height_])
+	Window(const unsigned int width, const unsigned int height, const sf::String& title)
+		: width_(width), height_(height), window_(sf::VideoMode({ width, height }), title),
+		depth_buffer_(new float[width_ * height_]), shading_mode_(ShadingMode::PHONG)
 	{
 		for (unsigned int i = 0; i < width * height; ++i) {
 			depth_buffer_[i] = std::numeric_limits<float>::max();
@@ -183,6 +250,8 @@ public:
 
             camera.handle_input();
 
+			process_shading_input();
+
             Matrix4 view = camera.getViewMatrix();
             Matrix4 model = Matrix4::identity();
             Matrix4 mvp = proj * view * model;
@@ -198,7 +267,13 @@ public:
 			framebuffer_->display(&window_);
             window_.display();
 			fps_ = 1.f / delta_time.asSeconds();
-			window_.setTitle("Pipeline - FPS: " + std::to_string(static_cast<int>(fps_)));
+			std::string mode_str;
+			switch (shading_mode_) {
+			case ShadingMode::FLAT: mode_str = "Flat"; break;
+			case ShadingMode::GOURAUD: mode_str = "Gouraud"; break;
+			case ShadingMode::PHONG: mode_str = "Phong"; break;
+			}
+			window_.setTitle("Pipeline - FPS: " + std::to_string(static_cast<int>(fps_)) + " | " + mode_str);
         }
 	}
 
