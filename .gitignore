@@ -15,7 +15,6 @@ Debug/
 Release/
 
 # Archivos generados de compilación
-*.obj
 *.exe
 *.pdb
 *.ipch
