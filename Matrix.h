@@ -127,6 +127,20 @@ struct Matrix4 {
         return result;
     }
 
+    static Matrix4 orthographic(float L, float R, float T, float B, float z_near, float z_far) {
+        Matrix4 result = {};
+
+        result.m[0][0] = 2 / (R - L);
+        result.m[1][1] = 2 / (T - B);
+        result.m[2][2] = -2 / (z_far - z_near);
+        result.m[3][3] = 1.f;
+        result.m[0][3] = -(R + L) / (R - L);
+        result.m[1][3] = -(T + B) / (T - B);
+        result.m[2][3] = -(z_far + z_near) / (z_far - z_near);
+        
+        return result;
+    }
+
 
     static Matrix4 look_at(const Vector3<float>& eye, const Vector3<float>& target, const Vector3<float>& y) {
         Vector3<float> fwd = (eye - target).normalized();

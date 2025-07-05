@@ -7,14 +7,9 @@
 #include "Mesh.h"
 #include <limits>
 #include <SFML/System/Clock.hpp>
-#include "Lightning.h"
+#include "Lighting.h"
 #include <SFML/Window/Keyboard.hpp>
-
-enum class ShadingMode {
-	FLAT,
-	GOURAUD,
-	PHONG
-};
+#include "InputManager.h"
 
 struct Vertex
 {
@@ -35,11 +30,11 @@ class Window {
 	float* depth_buffer_ = nullptr;
 	float fps_ = 0.f;
 	float last_time_ = 0.f;
-	ShadingMode shading_mode_ = ShadingMode::PHONG;
 	sf::Clock clock_;
-	bool key_f1_was_pressed_ = false;
-	bool key_f2_was_pressed_ = false;
-	bool key_f3_was_pressed_ = false;
+	ShadingMode shading_mode_ = ShadingMode::PHONG;
+	ProjectionMode projection_mode_ = ProjectionMode::PERSPECTIVE;
+	InputManager input_manager_;
+
 
 
 	void draw_mesh(const std::unique_ptr<Mesh>& mesh, const Matrix4& mvp, const Matrix4& view, const CameraController camera) const
@@ -194,32 +189,26 @@ class Window {
 		return (a.x - c.x) * (b.y - c.y) - (b.x - c.x) * (a.y - c.y);
 	}
 
-	void process_shading_input()
-	{
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::F1)) {
-			if (!key_f1_was_pressed_) {
-				shading_mode_ = ShadingMode::FLAT;
-				key_f1_was_pressed_ = true;
-			}
+	Matrix4 get_projection_matrix() const {
+		if (projection_mode_ == ProjectionMode::PERSPECTIVE) {
+			return Matrix4::perspective(
+				90.0f * 3.1415f / 180.0f,
+				static_cast<float>(width_) / static_cast<float>(height_),
+				0.1f,
+				100.0f);
 		}
-		else key_f1_was_pressed_ = false;
-
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::F2)) {
-			if (!key_f2_was_pressed_) {
-				shading_mode_ = ShadingMode::GOURAUD;
-				key_f2_was_pressed_ = true;
-			}
+		else {
+			float aspect = static_cast<float>(width_) / static_cast<float>(height_);
+			float ortho_width = 10.0f;
+			float ortho_height = ortho_width / aspect;
+			return Matrix4::orthographic(
+				-ortho_width / 2, ortho_width / 2,
+				ortho_height / 2, -ortho_height / 2,
+				0.1f,
+				100.0f);
 		}
-		else key_f2_was_pressed_ = false;
-
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::F3)) {
-			if (!key_f3_was_pressed_) {
-				shading_mode_ = ShadingMode::PHONG;
-				key_f3_was_pressed_ = true;
-			}
-		}
-		else key_f3_was_pressed_ = false;
 	}
+
 
 
 public:
@@ -238,7 +227,7 @@ public:
 	{
 		framebuffer_ = std::make_unique<Framebuffer>(width_,height_);
 		auto camera = CameraController();
-		const Matrix4 proj = Matrix4::perspective(90.0f * 3.1415f / 180.0f, static_cast<float>(width_) / static_cast<float>(height_), 0.1f, 100.0f);
+		Matrix4 proj = Matrix4::perspective(90.0f * 3.1415f / 180.0f, static_cast<float>(width_) / static_cast<float>(height_), 0.1f, 100.0f);
         while (window_.isOpen())
         {
 			sf::Time delta_time = clock_.restart();
@@ -250,10 +239,13 @@ public:
 
             camera.handle_input();
 
-			process_shading_input();
+			input_manager_.update(shading_mode_, projection_mode_);
+
 
             Matrix4 view = camera.getViewMatrix();
             Matrix4 model = Matrix4::identity();
+			proj = get_projection_matrix();
+
             Matrix4 mvp = proj * view * model;
 
 			framebuffer_->clear(sf::Color::Black);
@@ -269,9 +261,9 @@ public:
 			fps_ = 1.f / delta_time.asSeconds();
 			std::string mode_str;
 			switch (shading_mode_) {
-			case ShadingMode::FLAT: mode_str = "Flat"; break;
-			case ShadingMode::GOURAUD: mode_str = "Gouraud"; break;
-			case ShadingMode::PHONG: mode_str = "Phong"; break;
+				case ShadingMode::FLAT: mode_str = "Flat"; break;
+				case ShadingMode::GOURAUD: mode_str = "Gouraud"; break;
+				case ShadingMode::PHONG: mode_str = "Phong"; break;
 			}
 			window_.setTitle("Pipeline - FPS: " + std::to_string(static_cast<int>(fps_)) + " | " + mode_str);
         }

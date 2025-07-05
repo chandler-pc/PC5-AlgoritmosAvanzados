@@ -151,7 +151,9 @@
     <ClCompile Include="Vector.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Enums.h" />
     <ClInclude Include="Framebuffer.h" />
+    <ClInclude Include="InputManager.h" />
     <ClInclude Include="Lightning.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
