@@ -55,17 +55,31 @@ public:
                 vertices.emplace_back(x, y, z);
             }
             else if (prefix == "f") {
-                int v1, v2, v3;
-                if (line.find('/') != std::string::npos) {
-                    std::replace(line.begin(), line.end(), '/', ' ');
-                    std::istringstream iss2(line);
-                    iss2 >> prefix >> v1 >> v2 >> v3;
+                std::vector<int> vertex_indices;
+                std::string vertex_str;
+                while (iss >> vertex_str) {
+                    std::istringstream vss(vertex_str);
+                    std::string v, vt, vn;
+                    int vi = 0;
+
+                    std::getline(vss, v, '/');
+                    vi = std::stoi(v);
+
+                    std::getline(vss, vt, '/');
+                    std::getline(vss, vn, '/');
+
+                    vertex_indices.push_back(vi - 1);
                 }
-                else {
-                    iss >> v1 >> v2 >> v3;
+
+                for (size_t i = 1; i + 1 < vertex_indices.size(); ++i) {
+                    faces.emplace_back(
+                        vertex_indices[0],
+                        vertex_indices[i],
+                        vertex_indices[i + 1]
+                    );
                 }
-                faces.emplace_back(v1 - 1, v2 - 1,v3 - 1);
-			}
+            }
+
 			else if (prefix == "vn") {
 				float nx, ny, nz;
 				iss >> nx >> ny >> nz;
