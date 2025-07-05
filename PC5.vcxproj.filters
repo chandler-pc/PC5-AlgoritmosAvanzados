@@ -44,5 +44,8 @@
     <ClInclude Include="Window.h">
       <Filter>Archivos de origen\render</Filter>
     </ClInclude>
+    <ClInclude Include="Lightning.h">
+      <Filter>Archivos de origen\render</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

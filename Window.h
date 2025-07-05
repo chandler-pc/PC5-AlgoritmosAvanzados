@@ -7,6 +7,7 @@
 #include "Mesh.h"
 #include <limits>
 #include <SFML/System/Clock.hpp>
+#include "Lightning.h"
 
 struct Vertex
 {
@@ -21,6 +22,7 @@ class Window {
 	sf::RenderWindow window_;
 	std::vector<std::unique_ptr<Mesh>> meshes_;
 	std::unique_ptr<Framebuffer> framebuffer_;
+	std::unique_ptr<Lighting> lighting_;
 	float* depth_buffer_ = nullptr;
 	float fps_ = 0.f;
 	float last_time_ = 0.f;
@@ -133,23 +135,9 @@ class Window {
 					float beta = w1 / area;
 					float gamma = w2 / area;
 					Vector3<float> interpolated_normals = (v0.normal * alpha + v1.normal *  beta   + v2.normal * gamma ).normalized();
-					Vector3<float> lightPos = Vector3<float>(0.0f, 10.0f, 10.0f);
-					Vector3<float> L = (lightPos).normalized();
-					Vector3<float> V = (camera.position).normalized();
-					Vector3<float> R = (interpolated_normals * interpolated_normals.dot(L) * 2.0f - L).normalized();
 
-					float ambient = 0.1f;
-					float diff = std::max(0.0f, interpolated_normals.dot(L));
-					float spec = pow(std::max(0.0f, R.dot(V)), 100);
+					sf::Color color = lighting_->calculate_color(interpolated_normals, camera.position);
 
-					float intensity = ambient + 1 * diff + .5f * spec;
-					intensity = std::clamp(intensity, 0.0f, 1.0f);
-
-					sf::Color color = sf::Color(
-						static_cast<int>(intensity * 255),
-						static_cast<int>(intensity * 255),
-						static_cast<int>(intensity * 255)
-					);
 
 					float z = 1/(alpha / za + beta / zb + gamma / zc);
 
@@ -176,6 +164,7 @@ public:
 			depth_buffer_[i] = std::numeric_limits<float>::max();
 		}
 		clock_ = sf::Clock();
+		lighting_ = std::make_unique<Lighting>();
 	}
 
 	void run()
