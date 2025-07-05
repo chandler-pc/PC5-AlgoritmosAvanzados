@@ -112,6 +112,7 @@ public:
 			face_color = lighting_->calculate_color(face_normal, camera.position);
 		}
 
+		auto randomColor = sf::Color(rand() % 256, rand() % 256, rand() % 256);
 		for (int y = ymin; y <= ymax; ++y) {
 			for (int x = xmin; x <= xmax; ++x) {
 				if (x < 0 || x >= width_ || y < 0 || y >= height_) continue;
@@ -120,7 +121,6 @@ public:
 				float w0 = getDeterminant(b, c, p);
 				float w1 = getDeterminant(c, a, p);
 				float w2 = getDeterminant(a, b, p);
-
 				if (w0 >= 0 && w1 >= 0 && w2 >= 0) {
 					float alpha = w0 / area;
 					float beta = w1 / area;

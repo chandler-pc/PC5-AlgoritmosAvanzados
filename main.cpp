@@ -12,7 +12,7 @@ int main()
 
 	auto mesh = std::make_unique<Mesh>();
 
-	if (!mesh->load_from_obj("teapot.obj")) {
+	if (!mesh->load_from_obj("cow.obj")) {
 		std::cerr << "Failed to load teapot.obj" << "\n";
 		return -1;
 	}

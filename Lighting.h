@@ -1,5 +1,4 @@
 #pragma once
-#pragma once
 #include "Vector.h"
 #include <SFML/Graphics/Color.hpp>
 #include <algorithm>
