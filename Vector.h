@@ -1,9 +1,6 @@
 ﻿#pragma once
 #include <cmath>
 
-#include <type_traits>
-#include <cmath>
-
 template<typename T>
 struct Vector2 {
     T x, y;

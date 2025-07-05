@@ -2,7 +2,6 @@
 
 #include <SFML/Graphics.hpp>
 #include <cstring>
-#include <limits>
 
 class Framebuffer {
 public:

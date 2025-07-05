@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/System/Clock.hpp>
-#include <SFML/Window/Keyboard.hpp>
 #include <limits>
 #include <vector>
 #include <memory>
@@ -9,7 +8,6 @@
 #include "CameraController.h"
 #include "Framebuffer.h"
 #include "Matrix.h"
-#include "Vector.h"
 #include "Mesh.h"
 #include "Lighting.h"
 #include "InputManager.h"
